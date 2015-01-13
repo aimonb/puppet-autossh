@@ -1,0 +1,14 @@
+[Unit]
+Description="Autossh service - <%= @tun_name %>"
+After="network.service"
+
+[Service]
+TimeoutStopSec=3
+ExecStart=/etc/autossh/autossh-tunnel.sh start <%= @tun_name %>
+PIDFile=/var/run/autossh-<%= @tun_name %>
+KillSignal=9
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

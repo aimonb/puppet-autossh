@@ -1,0 +1,16 @@
+Host <%= @remote_ssh_host %>
+Ciphers = <%= @ssh_ciphers %>
+<% if ssh_reuse_established_connections == true -%>
+ControlMaster auto
+ControlPath ~/.ssh/sockets/%r@%g-%p
+ControlPersist 600
+<% end -%>
+<% if ssh_enable_compression == true -%>
+Compression yes
+<% end -%>
+<% if ssh_enable_compression == false -%>
+Compression no
+<% end -%>
+<% if ssh_stricthostkeychecking == false -%>
+StrictHostKeyChecking no
+<% end -%>

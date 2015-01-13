@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# /etc/autossh/autossh-tunnel.sh
+#
+# Service script for the autossh processes 
+#
+# Author:    Aimon Bustardo <me at aimon dot net>
+# Date:      24-9-2014
+# Version:   1.0.0
+# License:   Apache 2.0
+#
+# Adapted for Systemd byL
+#
+# Author:   Jason Ball <jason@ball.net>
+# Date:     7/1/2014
+# Version:  1.0.0
+# Licence:  Apache 2.0
+
+tunnel_name=$2
+
+PID_FILE=/var/run/autossh-$tunnel_name
+export AUTOSSH_PIDFILE=$PID_FILE
+LOCK_FILE=/var/lock/subsys/autossh-$tunnel_name
+PROG=autossh
+
+SVC_NAME=autossh-$tunnel_name
+SVC_BIN=/usr/bin/autossh
+# Load config or exit
+. /etc/autossh/autossh-$tunnel_name.conf || (echo 'Config file not found!'; exit 1)
+SVC_CONF="${TUNNEL_ARGS} ${HOSTPORT}:localhost:${PORT} -p ${REMOTE_SSH_PORT} ${USER}@${REMOTE_SSH_HOST}"
+
+STARTUP_WAIT=2
+SHUTDOWN_WAIT=2
+
+# returns the pid.  if 0 is returned, no pid exists
+pid() {
+  PID=0
+  if [ -f $PID_FILE ]; then read PID < $PID_FILE; fi
+  echo $PID
+}
+
+pid_bin() {
+  pid_bin=""
+  if [ $1 -eq 0 ]; then echo ""; return; fi
+  pid_bin=$(ps --pid $1 | grep $1 |  awk '{ print $4 }')
+  echo $pid_bin
+}
+
+start() {
+  PID=$(pid)
+  PID_BIN=$(pid_bin $PID)
+ 
+  if [ $PID -ne 0 ] && [ "$PID_BIN" == "$PROG" ]; then
+    echo
+    exit 0
+  elif [ $PID -ne 0 ] && \
+       [ "$PID_BIN" != "$PROG" ]; then
+       # oops, pid files exists AND we've got the wrong binary
+       # running
+       # this must mean things went down badly at some point.  we'll clean it up!
+       rm -f $PID_FILE 
+  fi
+  runuser - $USER -c "$SVC_BIN $SVC_CONF"
+  cmd=`echo "$SVC_BIN $SVC_CONF" | sed 's/-f/ /g' | sed 's/\s/\\\s+/g'`
+  pgrep -f "$cmd" > $PID_FILE
+
+  # wait for it to load up
+  count=0
+  until [ -f $PID_FILE ] || [ "$count" -gt "$STARTUP_WAIT" ]; do
+    sleep 1
+    let count="${count}+1"
+  done
+  PID=$(pid)
+  PID_BIN=$(pid_bin $PID)
+  if [ $PID -gt 0 ] && [ "${PID_BIN}" == "${PROG}" ]; then
+    exit 0
+  else
+    exit 1
+  fi
+}
+
+case "$1" in
+  start)
+    echo -n "Starting $SVC_NAME service: "
+    start
+    touch $LOCK_FILE
+  ;;
+  *)
+  echo "Usage: $SVC_NAME {start} tunnel_name"
+    exit 1
+  ;;
+esac

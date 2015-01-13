@@ -71,7 +71,9 @@ start() {
     rm -f $PID_FILE $LOCK_FILE
   fi
   runuser - $USER -c "$SVC_BIN $SVC_CONF"
-  pidof autossh > $PID_FILE
+  cmd=`echo "$SVC_BIN $SVC_CONF" | sed 's/-f/ /g' | sed 's/\s/\\\s+/g'`
+  pgrep -f "$cmd" > $PID_FILE
+
   # wait for it to load up
   count=0
   until [ -f $PID_FILE ] || [ "$count" -gt "$STARTUP_WAIT" ]; do
@@ -104,7 +106,7 @@ stop() {
     PID=$(pid)
     if [ $PID -ne 0 ]; then kill -9 $PID; fi
     PID=$(pid)
-    if [ $PID -eq 0 ]; then
+    if [ `ps -p $PID | wc -l` -eq 1 ]; then
       log_success_msg
     else
       log_failure_msg

@@ -1,16 +1,30 @@
 {
-  "name": "aimonb-autossh",
-  "version": "0.2.0",
-  "author": "aimonb",
-  "summary": "Manage Standard and Reverse SSH Tunnels",
+  "name": "agronaught-autossh",
+  "version": "1.2.3",
+  "author": "agronaught",
+  "summary": "Manage ssh tunnels/port forwarding under openssh including both the source (originator) and target (destination) servers.",
   "license": "Apache 2.0",
-  "source": "https://github.com/aimonb/puppet-autossh",
-  "project_page": "https://github.com/aimonb/puppet-autossh",
-  "issues_url": "https://github.com/aimonb/puppet-autossh/issues",
+  "source": "https://github.com/agronaught/puppet-autossh",
+  "project_page": "https://github.com/agronaught/puppet-autossh",
+  "issues_url": "https://github.com/agronaught/puppet-autossh/issues",
+  "operatingsystem_support": [
+    {
+    "operatingsystem":"RedHat",
+    "operatingsystemrelease":[ "6.0","7.0" ]
+    },
+    {
+    "operatingsystem":"Centos",
+    "operatingsystemrelease":[ "6.0","7.0" ]
+    }
+   ],
   "dependencies": [
     {
       "name": "puppetlabs-stdlib",
-      "version_range": ">= 1.0.0"
+      "version_requirement": ">= 4.3.0"
+    },
+    {
+      "name": "puppetlabs-concat",
+      "version_requirement": ">= 1.1.0"
     }
   ]
 }
